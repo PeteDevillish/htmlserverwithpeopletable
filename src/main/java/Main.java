@@ -20,30 +20,35 @@ import java.util.List;
 // Po wysłaniu żądania metodą post zostaje dodana do listy osoba oraz w odpowiedzi mamy dokument o treści: utworzono osobę: <imię>, <nazwisko>, <data urodzenia>.
 // Oraz link prowadzący do tabeli wszystkich osób (wraz z formularzem).-->
 public class Main {
+    private static String users = "";
+
     public static void main(String[] args) throws IOException {
         HttpServer httpServer = ServerBootstrap.bootstrap()
                 .setListenerPort(80)
-                .registerHandler("/", (req, res, con) -> { ;
+                .registerHandler("/", (req, res, con) -> {
+                    ;
                     System.out.println(req.getRequestLine().getMethod().equals("POST"));
                     List<String[]> usersInTable = new ArrayList<>();
-                    String users = new String();
-                    if (req.getRequestLine().getMethod().equals("POST")){
+                    if (req.getRequestLine().getMethod().equals("POST")) {
                         try {
-                            HttpEntity entity= ((BasicHttpEntityEnclosingRequest) req).getEntity();
+                            HttpEntity entity = ((BasicHttpEntityEnclosingRequest) req).getEntity();
                             String reqBody = EntityUtils.toString(entity);
                             String[] params = reqBody.split("&|=");
                             System.out.println(Arrays.toString(params));
                             usersInTable.add(new String[]{params[1], params[3], params[5]});
-                            StringEntity resEntity = new StringEntity(table(usersInTable.get(usersInTable.size() - 1)), "UTF-8");
+                            users = addUser(users, usersInTable.get(usersInTable.size() - 1));
+//                            StringEntity resEntity = new StringEntity(basic(table(users)), "UTF-8");
+                            StringEntity resEntity = new StringEntity(basic(newUser(usersInTable.get(usersInTable.size() - 1))), "UTF-8");
                             resEntity.setContentType("text/html");
                             res.setEntity(resEntity);
 
-                        } catch(Exception e){
+                        } catch (Exception e) {
                             System.out.println("something goes wrong");
                         }
 
-                    } else{
-                        StringEntity stringEntity = new StringEntity(form(), "UTF-8");
+                    } else {
+//                        StringEntity stringEntity = new StringEntity(form(), "UTF-8");
+                        StringEntity stringEntity = new StringEntity(basic(newForm() + table(users)), "UTF-8");
                         stringEntity.setContentType("text/html");
                         res.setEntity(stringEntity);
                         res.setStatusCode(HttpStatus.SC_OK);
@@ -53,43 +58,30 @@ public class Main {
         httpServer.start();
     }
 
-    private static String users(String[] user, String users) {
-        return users + "    <tr>\n" +
-                "        <td>" + user[0] + "</td>\n" +
-                "        <td>" + user[1] + "</td>\n" +
-                "        <td>" + user[2] + "</td>\n" +
-                "    </tr>";
+    private static String newUser(String[] user) {
+        return "<div>\n" +
+                "    Utworzono osobę: \n" + user[0] + " " + user[1] + " " + user[2] +
+                "</div>" +
+                "<div>\n" +
+                "    <a href=\"\">Powróć do formularza</a>\n" +
+                "</div>";
     }
 
-    private static String table(String[] user) {
+
+    public static String basic(String body) {
         return "<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
-                "    <title>Table</title>\n" +
+                "    <title>Index</title>\n" +
                 "</head>\n" +
                 "<body>\n" +
-                "<table>\n" +
-                "    <thead>\n" +
-                "        <tr>\n" +
-                "            <th>Imie</th>\n" +
-                "            <th>Nazwisko</th>\n" +
-                "            <th>Data</th>\n" +
-                "        </tr>\n" +
-                "    </thead>\n" +
-                "    <tbody>\n" +
-                "    <tr>\n" +
-                "        <td>" +user[0] + "</td>\n" +
-                "        <td>" + user[1] + "</td>\n" +
-                "        <td>" + user[2] + "</td>\n" +
-                "    </tr>\n" +
-                "    </tbody>\n" +
-                "</table>\n" +
+                body +
                 "</body>\n" +
                 "</html>";
     }
 
-    public static String form(){
+    public static String newForm() {
         return "<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
@@ -117,7 +109,8 @@ public class Main {
                 "</body>\n" +
                 "</html>";
     }
-    public static String table(String users){
+
+    public static String table(String users) {
         return "<table>\n" +
                 "    <thead>\n" +
                 "        <tr>\n" +
@@ -133,5 +126,72 @@ public class Main {
                 "    </tbody>\n" +
                 "</table>\n";
     }
+
+    private static String addUser(String users, String[] user) {
+        return users + "    <tr>\n" +
+                "        <td>" + user[0] + "</td>\n" +
+                "        <td>" + user[1] + "</td>\n" +
+                "        <td>" + user[2] + "</td>\n" +
+                "    </tr>";
+    }
+
+//    private static String table(String[] user) {
+//        return "<!DOCTYPE html>\n" +
+//                "<html lang=\"en\">\n" +
+//                "<head>\n" +
+//                "    <meta charset=\"UTF-8\">\n" +
+//                "    <title>Table</title>\n" +
+//                "</head>\n" +
+//                "<body>\n" +
+//                "<table>\n" +
+//                "    <thead>\n" +
+//                "        <tr>\n" +
+//                "            <th>Imie</th>\n" +
+//                "            <th>Nazwisko</th>\n" +
+//                "            <th>Data</th>\n" +
+//                "        </tr>\n" +
+//                "    </thead>\n" +
+//                "    <tbody>\n" +
+//                "    <tr>\n" +
+//                "        <td>" + user[0] + "</td>\n" +
+//                "        <td>" + user[1] + "</td>\n" +
+//                "        <td>" + user[2] + "</td>\n" +
+//                "    </tr>\n" +
+//                "    </tbody>\n" +
+//                "</table>\n" +
+//                "</body>\n" +
+//                "</html>";
+//    }
+//
+//    public static String form() {
+//        return "<!DOCTYPE html>\n" +
+//                "<html lang=\"en\">\n" +
+//                "<head>\n" +
+//                "    <meta charset=\"UTF-8\">\n" +
+//                "    <title>Title</title>\n" +
+//                "</head>\n" +
+//                "<body>\n" +
+//                "<form action=\"\" method=\"post\">\n" +
+//                "    <div>\n" +
+//                "        <label for=\"name\">Imię</label>\n" +
+//                "        <input type=\"text\" name=\"name\" id=\"name\">\n" +
+//                "    </div>\n" +
+//                "    <div>\n" +
+//                "        <label for=\"surname\">Nazwisko</label>\n" +
+//                "        <input type=\"text\" name=\"surname\" id=\"surname\">\n" +
+//                "    </div>\n" +
+//                "    <div>\n" +
+//                "        <label for=\"date\">Data urodzenia</label>\n" +
+//                "        <input type=\"date\" name=\"date\" id=\"date\">\n" +
+//                "    </div>\n" +
+//                "    <div>\n" +
+//                "        <input type=\"submit\" id=\"\" value=\"Wyślij\">\n" +
+//                "    </div>\n" +
+//                "</form>\n" +
+//                "</body>\n" +
+//                "</html>";
+//    }
+
+
 }
 
